@@ -14,10 +14,9 @@ let evtFocus = new MouseEvent('focus', {
 window.dispatchEvent(evtFocus);
 window.onblur = null; 
 
-var script = document.createElement('script');
+let script = document.createElement('script');
 script.setAttribute("type", "text/javascript");
 script.src = chrome.extension.getURL('injected.js');
 script.innerHTML = script;
 document.getElementsByTagName("head")[0].appendChild(script);
 document.getElementsByTagName("body")[0].setAttribute("onLoad", "ai_on();");
-

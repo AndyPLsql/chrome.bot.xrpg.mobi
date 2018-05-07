@@ -87,15 +87,15 @@ function loops() {
   if ($('div.spinner-loading').length > 0) {
     repeatCount += 10;
     console.log("Long loading...", repeatCount)
+  } else {
+    if (state === "idle" || state === "complete") {
+      repeatCount = 0;
+    }
   }
 
-  if (repeatCount > 100 && state !== "complete" ) {
+  if (repeatCount > 150) {
     ai_reset();
     return;
-  }
-
-  if (state === "idle" || state === "complete") {
-    repeatCount = 0;
   }
 
   let pwd = getPlace();
@@ -154,6 +154,7 @@ function openHomePage(nextfunc, timeout = 3000) {
     }
     else
     {
+      repeatCount += 5;
       console.log("Не нашли кнопку домой!");
     }
   }
