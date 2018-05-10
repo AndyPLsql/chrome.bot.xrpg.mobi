@@ -1,11 +1,16 @@
 console.log("Ok injected file loaded");
 
+//ENUMS
+let InfoTypesEnum = Object.freeze({"simple":0, "info":1, "warning":2, "details":3})
+
+//Settings
 let job = "unknown"; // "unknown", "underground", "tavern"
-let jobs = ["arena", "underground", "underground", "underground", "tavern"];
+let jobs = [];
 let currentJobId = 0;
 let state = "idle"; // "idle", "unknown", "prepare", "complete", "execution", "fight"
 let mode = "auto"; //"auto", "manual"
-let debugLevel = 5;
+let debugLevel = 0;
+let infoLevel = 1;
 let rewardSilverTotal = 0;
 let rewardKeyTotal = 0;
 let rewardSilverArena = 0;
@@ -13,14 +18,13 @@ let rewardKeyArena = 0;
 let repeatCount = 0;
 let arenaCountdown = 15;
 
-
 function init() {
   job = "unknown";
-  jobs = ["arena", "underground", "underground", "underground", "tavern"];
+  jobs = ["arena", "underground", "underground", "underground", "tavern", "bag"];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
-  debugLevel = 5;
+  debugLevel = 0;
   rewardSilverTotal = 0;
   rewardKeyTotal = 0;
   rewardSilverArena = 0;
@@ -31,7 +35,7 @@ function init() {
 
 function ai_on(){
   //Точка входа
-  console.log("---AI ON---");
+  printInfoMessage("---AI ON---");
   
   // let evtFocus = new MouseEvent('focus', {
   //   bubbles: false,
@@ -45,14 +49,14 @@ function ai_on(){
   // });
   // window.dispatchEvent(evtFocus);
 
-  window.onblur = null; /*function () {console.log("onblur...")};*/ // Чтобы страницы работали в фоне
+  window.onblur = null; // Чтобы страницы работали в фоне
 
   init();
   setTimeout(loops, 8000);
 }
 
 function ai_off() {
-  console.log("---AI OFF---");
+  printInfoMessage("---AI OFF---");
   let highestTimeoutId = setTimeout(";");
   for (let i = 0 ; i < highestTimeoutId ; i++) {
     clearTimeout(i);
@@ -61,7 +65,7 @@ function ai_off() {
 }
 
 function ai_reset() {
-  console.log("---AI RESET---");
+  printInfoMessage("---AI RESET---");
   location.reload();
   ai_off();
   setTimeout(loops, 8000);
@@ -82,16 +86,7 @@ function closeClaimRewardNotification() {
 }
 
 function loops() {
-  printDebugInfo("loops", 1);
-
-  if ($('div.spinner-loading').length > 0) {
-    repeatCount += 10;
-    console.log("Long loading...", repeatCount)
-  } else {
-    if (state === "idle" || state === "complete") {
-      repeatCount = 0;
-    }
-  }
+  printDebugInfo("loops");
 
   if (repeatCount > 150) {
     ai_reset();
@@ -102,6 +97,15 @@ function loops() {
   if ( (state === "idle" || state === "complete") && pwd !== "main") {
     openHomePage(loops);
     return;
+  }
+
+  if ($('div.spinner-loading').length > 0) {
+    repeatCount += 10;
+    printInfoMessage("Long loading (repeatCount=" + repeatCount + ")", InfoTypesEnum.warning)
+  } else {
+    if (state === "idle" || state === "complete") {
+      repeatCount = 0;
+    }
   }
 
   closeLevelUpNotification();
@@ -120,6 +124,9 @@ function loops() {
       case "tavern":
         goTavern();
         break;
+      case "bag":
+        goBag();
+        break;
       default:
         currentJobId = 0;
         break;
@@ -129,13 +136,13 @@ function loops() {
   if (mode === "auto") {
     let st = setTimeout(loops,  18000);
   } else {
-    console.log("loops is off");
+    printInfoMessage("loops is off");
   }
 
 }
 
 function getPlace() {
-  let pwd = location.href.replace("http://xrpg.mobi/?src=portal#/","").replace("/","")
+  let pwd = location.href.replace("http://xrpg.mobi/?src=portal#/","").replace(/^\/+|\/+$/g,"")
   if (pwd === "") {
     pwd = "unknown";
   }
@@ -155,7 +162,26 @@ function openHomePage(nextfunc, timeout = 3000) {
     else
     {
       repeatCount += 5;
-      console.log("Не нашли кнопку домой!");
+      printInfoMessage("Не нашли кнопку домой! (repeatCount="+ repeatCount+")", InfoTypesEnum.warning);
+    }
+  }
+  if (nextfunc !== undefined)
+  {
+    setTimeout(nextfunc, timeout);
+  }
+}
+
+function openHeroProfile(nextfunc, timeout = 3000){
+  printDebugInfo("openHeroProfile");
+  let pwd = getPlace();
+  if (pwd.search("profile") === -1) {
+    let btnProfile = $('div.footer-sectionName:contains("Герой")')[0]
+    if (btnProfile !== undefined) {
+      btnProfile.click();
+    }
+    else {
+      repeatCount += 5;
+      printInfoMessage("Не нашли кнопку Герой! (repeatCount="+ repeatCount+")", InfoTypesEnum.warning);
     }
   }
   if (nextfunc !== undefined)
@@ -167,7 +193,34 @@ function openHomePage(nextfunc, timeout = 3000) {
 function printDebugInfo(funcName, _debugLevel=debugLevel) {
   if (_debugLevel > 0) {
     console.log("func:" + funcName + " | job:" + job + " | state: " + state);
-    
+  }
+}
+
+/**
+ * Вывод информационных сообщений
+ * @param message Сообщение которое нужно отобразить
+ * @param _infoType Тип выводимого сообщения (enum)
+ * @param _infoLevel Уровень детализации
+ */
+function printInfoMessage(message, _infoType=InfoTypesEnum.simple, _infoLevel=infoLevel) {
+  if (_infoLevel > 0) {
+    switch (_infoType) {
+      case InfoTypesEnum.simple:
+        console.log(message);
+        break;
+      case InfoTypesEnum.info:
+        console.log("%c" + message, "color: white; background-color: green;");
+        break;
+      case InfoTypesEnum.warning:
+        console.log("%c" + message, "color: white; font-style: italic; background-color: red; padding: 2px;");
+        break;
+      case InfoTypesEnum.details:
+        console.log("%c" + message, "color: black; font-style: italic; background-color: aqua; padding: 2px;");
+        break;
+      default:
+        console.log(message);
+        break;
+    }
   }
 }
 
@@ -520,18 +573,18 @@ function kick(canvas) {
     canvas.dispatchEvent(evtLeftOver);
     canvas.dispatchEvent(evtLeftDown);
     canvas.dispatchEvent(evtLeftUp);
-    console.log("left kick. x:", evtLeftDown.clientX, "y:", evtLeftDown.clientY)
+    //console.log("left kick. x:", evtLeftDown.clientX, "y:", evtLeftDown.clientY)
 
     canvas.dispatchEvent(evtRightOver);
     canvas.dispatchEvent(evtRightDown);
     canvas.dispatchEvent(evtRightUp);
-    console.log("right kick. x:", evtRightDown.clientX, "y:", evtRightDown.clientY)
+    //console.log("right kick. x:", evtRightDown.clientX, "y:", evtRightDown.clientY)
 
     window.dispatchEvent(evtFocus);
     canvas.dispatchEvent(evtOver);
     canvas.dispatchEvent(evtDown);
     canvas.dispatchEvent(evtUp);
-    console.log("main kick. x:", evtDown.clientX, "y:", evtDown.clientY)
+    //console.log("main kick. x:", evtDown.clientX, "y:", evtDown.clientY)
 }
 
 function goUnderground() {
@@ -828,4 +881,66 @@ function goTavern() {
   }
   state = "complete";
   
+}
+
+function goBag() {
+  printDebugInfo("goBag");
+  repeatCount++;
+  job = "bag";
+
+  if (state === "idle" || state === "complete") {
+    state = "execution";
+    let btnBag =  $('div.sectionIcon-name:contains("Сумка")')[0]
+    if (btnBag !== undefined) {
+      btnBag.click();
+      setTimeout(goBag, 3000);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }
+  }
+  
+  if (state === "execution") {
+    //Сначала закрываем открытые окошки и только потом давим "Разобрать"
+    let btnClose = $('div.button-content:contains("Закрыть")')[0];
+    if (btnClose !== undefined) {
+      btnClose.click();
+      setTimeout(goBag, 4000);
+      return;
+    }    
+
+    let btnDism = $('div.equipmentItemBlock-content:contains("Разобрать")')[0];
+    if (btnDism !== undefined) {
+      let dismInfo = $(btnDism).find('div.equipmentItemBlock-title')[0].innerText;
+      dismInfo += "; " + $(btnDism).find('div.equipmentGrade')[0].innerText;
+      
+      btnDism = $(btnDism).find('span:contains("Разобрать")')[0];
+      if (btnDism !== undefined) {
+        btnDism.click();
+        printInfoMessage("Разобрано: " + dismInfo, InfoTypesEnum.details);
+      } else {
+        printInfoMessage("Не разобрано: " + dismInfo, InfoTypesEnum.warning)
+      }
+      setTimeout(goBag, 4000);
+      return;
+    }
+
+    state = "complete"
+  }
+
+  state = "complete";
+}
+
+
+
+//Информация о герое
+function getHeroInfo() {
+  let pwd = getPlace();
+  if ( (state === "idle" || state === "complete") && pwd !== "main") {
+    openHeroProfile(getHeroInfo);
+    return;
+  }
+
+
 }
