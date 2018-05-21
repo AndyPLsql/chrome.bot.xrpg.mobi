@@ -20,3 +20,5 @@ script.src = chrome.extension.getURL('injected.js');
 script.innerHTML = script;
 document.getElementsByTagName("head")[0].appendChild(script);
 document.getElementsByTagName("body")[0].setAttribute("onLoad", "ai_on();");
+
+window.indexedDB.open("content_db", 1);

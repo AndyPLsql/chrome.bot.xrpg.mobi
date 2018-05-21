@@ -2,6 +2,11 @@ console.log("Ok injected file loaded");
 
 //ENUMS
 let InfoTypesEnum = Object.freeze({"simple":0, "info":1, "warning":2, "details":3})
+let JobStatesEnum = Object.freeze({"unknown":-1, "idle":0, "prepare":100, "execution":200, "fight":300, "complete":400})
+
+
+//global temp variables (be careful!)
+let jobMessage = "";
 
 //Settings
 let job = "unknown"; // "unknown", "underground", "tavern"
@@ -19,8 +24,9 @@ let repeatCount = 0;
 let arenaCountdown = 15;
 
 function init() {
+  jobMessage = "";
   job = "unknown";
-  jobs = ["arena", "underground", "underground", "underground", "tavern", "bag"];
+  jobs = ["arena", "underground", "underground", "underground", "tavern", "bag", "task"];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
@@ -127,6 +133,9 @@ function loops() {
       case "bag":
         goBag();
         break;
+      case "task":
+        goTask();
+        break;
       default:
         currentJobId = 0;
         break;
@@ -223,6 +232,19 @@ function printInfoMessage(message, _infoType=InfoTypesEnum.simple, _infoLevel=in
     }
   }
 }
+
+/**
+ * Вывод сообщения хранящегося в переменной jobMessage
+ * @param {boolean} clearMessage Очистка глобальной переменной jobMessage после окончания
+ */
+function printJobMessage(clearMessage=false) {
+  printInfoMessage(jobMessage, InfoTypesEnum.info);
+  if (clearMessage) {
+    jobMessage = "";
+  }
+}
+
+
 
 function kick(canvas) {
     let x = Math.round(window.innerWidth/2);
@@ -883,6 +905,9 @@ function goTavern() {
   
 }
 
+/**
+ * Разбор шмоток
+ */
 function goBag() {
   printDebugInfo("goBag");
   repeatCount++;
@@ -932,7 +957,114 @@ function goBag() {
   state = "complete";
 }
 
+/**
+ * Собирает золото и ключи в заданиях
+ */
+function goTask() {
+  printDebugInfo("goTask");
+  repeatCount++;
+  job = "task";
 
+  if (state === "idle" || state === "complete") {
+    state = "execution1";
+    let btnTask =  $('div.sectionIcon-name:contains("Задания")')[0]
+    if (btnTask !== undefined) {
+      btnTask.click();
+      setTimeout(goTask, 3000);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }
+  }
+  
+  //Задания Главы
+  if (state === "execution1") {
+    let pwd = getPlace();
+    let btnContent = $('div.button-content:contains("Глава")')[0];
+    if (btnContent !== undefined && pwd !== "tasks") {
+      btnContent.click();
+      setTimeout(goTask, 3000)
+      return;
+    }
+
+    getClaim();
+
+    btnContent = $('div.questTask.questTask_isComplete-true div.questTask-text')[0];
+    if (btnContent !== undefined) {
+      jobMessage = "Задание главы:" + btnContent.innerText + "; ";
+      btnContent.click();
+      setTimeout(goTask, 3000);
+      return;
+    }
+
+    state = "execution2";
+  }
+  
+  //Задания Ежедневные
+  if (state === "execution2") {
+    let pwd = getPlace();
+    let btnContent = $('div.button-content:contains("Ежедневные")')[0];
+    if (btnContent !== undefined && pwd !== "tasks/daily") {
+      btnContent.click();
+      jobMessage = "";
+      setTimeout(goTask, 3000)
+      return;
+    }
+
+    getClaim();
+
+    btnContent = $('div.dailyQuestTask.dailyQuestTask_isComplete-true div.dailyQuestTask-text')[0];
+    if (btnContent !== undefined) {
+      jobMessage = "Задание ежед.:" + btnContent.innerText + "; ";
+      btnContent.click();
+      setTimeout(goTask, 3000);
+      return;
+    }
+
+    state = "complete";
+  }
+
+  state = "complete"
+}
+
+/**
+ * Получение наград
+ * TODO: Неплохобы доделать глобальный подсчет золота и ключей
+ * TODO: Возможно будет шмот в наградах, пока не учитывается
+ */
+function getClaim() {
+  printDebugInfo("getClaim");
+  
+  let lightbox = $('div.lightbox-box div.claimRewardNotification')[0];
+  if (lightbox !== undefined) {
+    jobMessage += lightbox.getElementsByClassName('claimRewardNotification-title')[0].innerText;
+    let results = lightbox.getElementsByClassName('battleResultResources-resource');
+    //Перебор наград
+    for (let i = 0; i < results.length; i++) {
+      let listClasses = results[i].getElementsByTagName('span')[0].classList;
+      for (let j = 0; j < listClasses.length; j++ ) {
+        switch (listClasses[j]) {
+          case "icon_type-gold":
+            jobMessage += "; Золото = ";
+            continue; 
+            break; //TODO: Вроде как до бряка не доходит дело. Нужна достоверная инфа
+          case "icon_type-key":
+            jobMessage += "; Ключи = ";
+            continue;
+            break; //TODO: Вроде как до бряка не доходит дело. Нужна достоверная инфа
+        }
+      }
+      jobMessage += results[i].getElementsByClassName("battleResultResources-value")[0].innerText;
+    }
+    //Закрытие окна наград
+    let btnClose = lightbox.getElementsByClassName("button-content")[0];
+    if (btnClose !== undefined) {
+      btnClose.click();
+    }
+    printJobMessage(true);
+  }
+}
 
 //Информация о герое
 function getHeroInfo() {
@@ -942,5 +1074,91 @@ function getHeroInfo() {
     return;
   }
 
+
+}
+
+//
+function getStorage() {
+  chrome.storage.local.set({key: value}, function() {
+    console.log('Value is set to ' + value);
+  });
+}
+
+function setStorage() {
+  var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+  var open = indexedDB.open("injected_DB", 3);
+  console.log(open)
+  open.onupgradeneeded = function(e) {
+    console.log("Upgrage...")
+    var db = open.result;
+    var store = db.createObjectStore("MyObjectStore", {keyPath: "id"});
+    var index = store.createIndex("NameIndex", ["name.last", "name.first"]);
+  };
+
+  open.onsuccess = function() {
+    // Start a new transaction
+    console.log("Success...")
+    var db = open.result;
+    var tx = db.transaction("MyObjectStore", "readwrite");
+    var store = tx.objectStore("MyObjectStore");
+    var index = store.index("NameIndex");
+
+    // Add some data
+    store.put({id: 12345, name: {first: "John", last: "Doe"}, age: 42});
+    store.put({id: 67890, name: {first: "Bob", last: "Smith"}, age: 35});
+    
+    // Query the data
+    var getJohn = store.get(12345);
+    var getBob = index.get(["Smith", "Bob"]);
+
+    getJohn.onsuccess = function() {
+        console.log(getJohn.result.name.first);  // => "John"
+    };
+
+    getBob.onsuccess = function() {
+        console.log(getBob.result.name.first);   // => "Bob"
+    };
+
+    // Close the db when the transaction is done
+    tx.oncomplete = function() {
+        db.close();
+    };
+  }
+
+  open.onerror = function (e) {
+    console.log("Error...")
+    console.dir(e)
+  }
+
+}
+
+
+function getStorage() {
+  var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+  var open = indexedDB.open("injected_DB", 3);
+  var db;
+  
+  open.onsuccess = function(event) {
+    db = open.result;
+    console.log("success: "+ db);
+  };
+  console.log(db)
+
+  var transaction = db.transaction(["id"]);
+  var objectStore = transaction.objectStore("id");
+  var open = objectStore.get("00-03");
+  
+  open.onerror = function(event) {
+    alert("Unable to retrieve daa from database!");
+  };
+  
+  open.onsuccess = function(event) {
+    // Do something with the request.result!
+    if(open.result) {
+          alert("Name: " + open.result.name + ", Age: " + open.result.age + ", Email: " + open.result.email);
+    } else {
+          alert("Kenny couldn't be found in your database!"); 
+    }
+  };
 
 }
