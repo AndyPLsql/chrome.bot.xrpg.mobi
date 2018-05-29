@@ -2,7 +2,8 @@ console.log("Ok injected file loaded");
 
 //ENUMS
 let InfoTypesEnum = Object.freeze({"simple":0, "info":1, "warning":2, "details":3})
-let JobStatesEnum = Object.freeze({"unknown":-1, "idle":0, "prepare":100, "execution":200, "fight":300, "complete":400})
+let JobStatesEnum = Object.freeze({"unknown":-1, "idle":0, "prepare":100, "execution":200, "fight":300, 
+  "complete":400, "invasion": 500})
 
 
 //global temp variables (be careful!)
@@ -21,12 +22,12 @@ let rewardKeyTotal = 0;
 let rewardSilverArena = 0;
 let rewardKeyArena = 0;
 let repeatCount = 0;
-let arenaCountdown = 15;
+let arenaCountdown = 340 ;
 
 function init() {
   jobMessage = "";
   job = "unknown";
-  jobs = ["arena", "underground", "underground", "underground", "tavern", "bag", "task"];
+  jobs = ["invasion", "arena", "underground", "underground", "underground", "tavern", "bag", "task", "clantask"];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
@@ -36,7 +37,7 @@ function init() {
   rewardSilverArena = 0;
   rewardKeyArena = 0;
   repeatCount = 0;
-  arenaCountdown = 15;
+  arenaCountdown = 340;
 }
 
 function ai_on(){
@@ -108,6 +109,13 @@ function loops() {
   if ($('div.spinner-loading').length > 0) {
     repeatCount += 10;
     printInfoMessage("Long loading (repeatCount=" + repeatCount + ")", InfoTypesEnum.warning)
+    if (repeatCount >= 110 && repeatCount <= 130) {
+      openHomePage(loops);
+      return;
+    } else {
+      openHeroProfile(loops);
+      return;
+    }
   } else {
     if (state === "idle" || state === "complete") {
       repeatCount = 0;
@@ -118,27 +126,39 @@ function loops() {
   closeClaimRewardNotification();
 
   if (state === "idle" || state === "complete") {
-    switch (jobs[currentJobId++]) {
-      case "underground":
-        goUnderground();
-        break;
-      case "arena":
-        if (arenaCountdown-- > 0) {
-          goArena();
-        }
-        break;
-      case "tavern":
-        goTavern();
-        break;
-      case "bag":
-        goBag();
-        break;
-      case "task":
-        goTask();
-        break;
-      default:
-        currentJobId = 0;
-        break;
+    //Быстрый переход в портал
+    if ($('div.questBlock.questBlock_isClickable-true.questBlock_isAvailable-true div.questBlock-label:contains("Портал")')[0] !== undefined)
+    {
+      goClanPortal();
+    } else {
+      switch (jobs[currentJobId++]) {
+        case "underground":
+          goUnderground();
+          break;
+        case "arena":
+          if (arenaCountdown-- > 0) {
+            goArena();
+          }
+          break;
+        case "tavern":
+          goTavern();
+          break;
+        case "bag":
+          goBag();
+          break;
+        case "task":
+          goTask();
+          break;
+        case "clantask":
+          goClanTask();
+          break;
+        case "invasion":
+          goInvasion();
+          break;
+        default:
+          currentJobId = 0;
+          break;
+      }
     }
   }
 
@@ -247,6 +267,7 @@ function printJobMessage(clearMessage=false) {
 
 
 function kick(canvas) {
+    printDebugInfo("kick");
     let x = Math.round(window.innerWidth/2);
     let y = 460;
     let evtFocus = new MouseEvent('focus', {
@@ -592,6 +613,7 @@ function kick(canvas) {
       y: y
     });
 
+    window.dispatchEvent(evtFocus);
     canvas.dispatchEvent(evtLeftOver);
     canvas.dispatchEvent(evtLeftDown);
     canvas.dispatchEvent(evtLeftUp);
@@ -742,27 +764,33 @@ function goArena() {
     let btnToWar = $('div.button-content:contains("Продолжить")');
     if (btnToWar.length > 0) {
       //Подсчет серебра
-      let rs = $('span.arenaResults-rewardResource');
-      if (rs.length > 0) {
-        rs.each( function( index, value ) {
-          rewardSilverArena = value.textContent-0;
-        } );
-      } else {
-        rewardSilverArena = 0;
+      jobMessage = "Арена: место #" + $('span.arenaResults-name.arenaResults-name_isSelf-true')[0].parentElement.parentElement.getElementsByClassName("arenaResults-tableCell_type-place")[0].innerText
+      let results = $('span.arenaResults-rewardResource');
+      for (let i = 0; i < results.length; i++) {
+        let listClasses = results[i].getElementsByTagName('span')[0].classList;
+        for (let j = 0; j < listClasses.length; j++ ) {
+          switch (listClasses[j]) {
+            case "icon_type-gold":
+              jobMessage += "; Золото = ";
+              continue; 
+              break;
+            case "icon_type-silver":
+              jobMessage += "; Серебро = ";
+              continue; 
+              break;
+            case "icon_type-key":
+              jobMessage += "; Ключи = ";
+              continue;
+              break;
+            case "icon_type-soulStone":
+              jobMessage += "; Фиал душ = ";
+              continue;
+              break;
+          }
+        }   
+        jobMessage += results[i].innerText;
       }
-      //Подсчет ключей
-      rs = $('div.arenaResults-keysReward');
-      if (rs.length > 0) {
-        rs.each( function( index, value ) {
-          let xstr = value.textContent.match( /Ключей найдено в бою: (\d+) из (\d+)/i );
-          rewardKeyArena += xstr[1]-0;
-        } );
-      } else {
-        rewardKeyArena = 0;
-      }
-
-      rewardSilverTotal += rewardSilverArena;
-      rewardKeyTotal += rewardKeyArena;
+      printJobMessage(true);
 
       btnToWar.each(function( index ) {
         $(this).click();
@@ -782,7 +810,7 @@ function goArena() {
   state = "fight";
   kick(canvas);
 
-  setTimeout(goArena, 1712);
+  setTimeout(goArena, 1812);
 
 }
 
@@ -1029,6 +1057,166 @@ function goTask() {
 }
 
 /**
+ * Берет и выполняет клановые задания
+ */
+function goClanTask() {
+  printDebugInfo("goClanTask");
+  repeatCount++;
+  job = "clantask";
+
+  if (state === "idle" || state === "complete") {
+    state = "openClanTask";
+    let btnClanTask =  $('div.footer-sectionName:contains("Клан")')[0]
+    if (btnClanTask !== undefined) {
+      btnClanTask.click();
+      setTimeout(goClanTask, 3000);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }
+  }
+
+  if (state === "openClanTask") {
+    let btnContent = $('div.clanActivity-buttons div.funcpanel-content:contains("Клановые задания")')[0];
+    if (btnContent !== undefined) {
+      state = "getclaim";
+      jobMessage = "";
+      btnContent.click();
+      setTimeout(goClanTask, 3000);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }    
+  }
+
+  if (state === "getclaim") {
+    getClaim();
+    
+    let btnGetClaim = $('div.clanTask.clanTask_isComplete-true')[0]
+    if (btnGetClaim !== undefined) {
+      state = "getclaim";
+      jobMessage = "Задание клана:" + $(btnGetClaim).find('div.clanTask-text')[0].innerText + "; ";
+      $(btnGetClaim).find('div.button-content:contains("Выполнить")')[0].click();
+    } else {
+      state = "getTask";
+    }
+    setTimeout(goClanTask, 3000);
+    return;
+  }
+
+  if (state === "getTask") {
+    state = "complete";    
+  }
+
+  state = "complete";
+
+}
+
+/**
+ * Обработка вторжений, если нужно, то дерется, если нет, то просто записывается
+ */
+function goInvasion() {
+  printDebugInfo("goInvasion");
+  job = "invasion";
+  repeatCount++;
+  if (state === "idle" || state === "complete") {
+    state = "prepare";
+    let btnArena =  $('div.sectionIcon-name:contains("Вторжение")')[0]
+    if (btnArena !== undefined) {
+      btnArena.click();
+      setTimeout(goInvasion, 3000);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }
+  }
+
+  if (state === "prepare") {
+    let btnGoWar= $('div.button-content:contains("Записаться")');
+    if (btnGoWar.length > 0) {
+      btnGoWar.click();
+      state = "fight";
+      setTimeout(goInvasion, 2000);
+      return;
+    }
+  }
+
+  let canvas = $('div[class*="fightscene"]').find('canvas')[0];
+  if (canvas !== undefined) {
+    state = "fight";
+    kick(canvas);
+    setTimeout(goInvasion, 1813);
+    return;
+  }
+
+  state = "complete";
+}
+
+/**
+ * Заход в клановый портал с целью кого-нибудь завалить
+ */
+function goClanPortal() {
+  printDebugInfo("goClanPortal");
+  repeatCount++;
+  job = "clanportal";
+
+  if (state === "idle" || state === "complete") {
+    state = "openClanPortal";
+    let btnClanTask =  $('div.footer-sectionName:contains("Клан")')[0]
+    if (btnClanTask !== undefined) {
+      btnClanTask.click();
+      setTimeout(goClanPortal, 3000);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }
+  }
+
+  if (state === "openClanPortal") {
+    let btnContent = $('div.clanActivity-buttons div.funcpanel-content:contains("Портал")')[0];
+    if (btnContent !== undefined) {
+      state = "execution";
+      jobMessage = "";
+      btnContent.click();
+      setTimeout(goClanPortal, 3000);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }    
+  }
+
+  if (state === "execution") {
+    let btnWar = $('div.button-content:contains("В бой")')[0];
+    if (btnWar !== undefined) {
+      btnWar.click();
+      state = "fight";
+      setTimeout(goClanPortal, 1000);
+      return;
+    }
+  }
+
+  if (state === "fight") {
+    let canvas = $('div[class*="fightscene"]').find('canvas')[0];
+    if (canvas !== undefined) {
+      state === "fight";
+      kick(canvas);
+    } else {
+      state = "complete";
+    }
+    setTimeout(goClanPortal, 967);
+    return;
+  }
+
+  state = "complete";
+}
+
+
+/**
  * Получение наград
  * TODO: Неплохобы доделать глобальный подсчет золота и ключей
  * TODO: Возможно будет шмот в наградах, пока не учитывается
@@ -1049,10 +1237,18 @@ function getClaim() {
             jobMessage += "; Золото = ";
             continue; 
             break; //TODO: Вроде как до бряка не доходит дело. Нужна достоверная инфа
+          case "icon_type-silver":
+            jobMessage += "; Серебро = ";
+            continue; 
+            break;            
           case "icon_type-key":
             jobMessage += "; Ключи = ";
             continue;
             break; //TODO: Вроде как до бряка не доходит дело. Нужна достоверная инфа
+          case "icon_type-soulStone":
+            jobMessage += "; Фиал душ = ";
+            continue;
+            break;
         }
       }
       jobMessage += results[i].getElementsByClassName("battleResultResources-value")[0].innerText;
@@ -1064,6 +1260,30 @@ function getClaim() {
     }
     printJobMessage(true);
   }
+}
+
+/**
+ * 
+ * @param {string} time_value Строка со временем, например 1ч. 50мин. 
+ */
+function getMilliseconds(time_value) {
+  let milliseconds = 0;
+  let regexp = /(\d?\d)ч\./g;
+  let match = regexp.exec(time_value)
+  if (match !== null) {
+    milliseconds = match[1] * 60 * 60 * 1000
+  }
+  regexp = /(\d?\d)мин\./g;
+  match = regexp.exec(time_value)
+  if (match !== null) {
+    milliseconds += match[1] * 60 * 1000
+  }
+  regexp = /(\d?\d)с\./g;
+  match = regexp.exec(time_value)
+  if (match !== null) {
+    milliseconds += match[1] * 1000
+  }  
+  return milliseconds;
 }
 
 //Информация о герое
