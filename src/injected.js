@@ -764,7 +764,11 @@ function goArena() {
     let btnToWar = $('div.button-content:contains("Продолжить")');
     if (btnToWar.length > 0) {
       //Подсчет серебра
-      jobMessage = "Арена: место #" + $('span.arenaResults-name.arenaResults-name_isSelf-true')[0].parentElement.parentElement.getElementsByClassName("arenaResults-tableCell_type-place")[0].innerText
+      let personLine = $('span.arenaResults-name.arenaResults-name_isSelf-true')[0].parentElement.parentElement
+      jobMessage = "Арена: место #" + personLine.getElementsByClassName("arenaResults-tableCell_type-place")[0].innerText
+      jobMessage += "; Рейтинг:" + personLine.getElementsByClassName("arenaResults-rankDelta")[0].innerText;
+      jobMessage += " (" + personLine.getElementsByClassName("arenaResults-rankValue")[0].innerText + ")";
+      
       let results = $('span.arenaResults-rewardResource');
       for (let i = 0; i < results.length; i++) {
         let listClasses = results[i].getElementsByTagName('span')[0].classList;
