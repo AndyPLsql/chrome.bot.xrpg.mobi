@@ -27,7 +27,7 @@ let arenaCountdown = 340 ;
 function init() {
   jobMessage = "";
   job = "unknown";
-  jobs = ["invasion", "arena", "underground", "underground", "underground", "tavern", "bag", "task", "clantask"];
+  jobs = ["clantask", "invasion", "arena", "underground", "underground", "underground", "tavern", "bag", "task"];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
@@ -263,8 +263,6 @@ function printJobMessage(clearMessage=false) {
     jobMessage = "";
   }
 }
-
-
 
 function kick(canvas) {
     printDebugInfo("kick");
@@ -1111,6 +1109,19 @@ function goClanTask() {
   }
 
   if (state === "getTask") {
+    let listStartTask = $('div.button-content:contains("Приступить")');
+    let arrMatches = [ /Убей на арене 60 соперников/g , /Получи \d+\w кланового опыта/g, /Сразись 60 раз в подземелье/g, /Сразись в квесте 39 раз/g, /Собери 45 ключей/g];
+    for (let i = 0; i < arrMatches.length; i++) {
+      for (let j = 0; j < listStartTask.length; j++) {
+        if ( arrMatches[i].exec(listStartTask[j].parentElement.parentElement.getElementsByClassName("clanTask-text")[0].innerText) !== null) {
+          listStartTask[j].click();
+          state = "exit";
+          setTimeout(goClanTask, 1500);
+          printInfoMessage("Взято задание: " + listStartTask[j].parentElement.parentElement.getElementsByClassName("clanTask-text")[0].innerText, InfoTypesEnum.simple);
+          return;
+        }
+      }
+    }
     state = "complete";    
   }
 
