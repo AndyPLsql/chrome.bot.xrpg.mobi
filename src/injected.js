@@ -27,7 +27,7 @@ let arenaCountdown = 340 ;
 function init() {
   jobMessage = "";
   job = "unknown";
-  jobs = ["clantask", "invasion", "arena", "underground", "underground", "underground", "tavern", "bag", "task"];
+  jobs = ["clantask", "bag", "task", "invasion", "arena", "underground", "underground", "underground", "tavern" ];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
@@ -944,7 +944,7 @@ function goBag() {
   job = "bag";
 
   if (state === "idle" || state === "complete") {
-    state = "execution";
+    state = "wear";
     let btnBag =  $('div.sectionIcon-name:contains("Сумка")')[0]
     if (btnBag !== undefined) {
       btnBag.click();
@@ -956,6 +956,26 @@ function goBag() {
     }
   }
   
+  if (state === "wear") {
+    let btnWear = $('div.equipmentItemBlock-content:contains("Надеть")')[0];
+    if (btnWear !== undefined) {
+      let dismInfo = $(btnWear).find('div.equipmentItemBlock-title')[0].innerText;
+      dismInfo += "; " + $(btnWear).find('div.equipmentGrade')[0].innerText;
+      
+      btnWear = $(btnWear).find('span:contains("Надеть")')[0];
+      if (btnWear !== undefined) {
+        btnWear.click();
+        printInfoMessage("Надето: " + dismInfo, InfoTypesEnum.details);
+      } else {
+        printInfoMessage("Не Надето: " + dismInfo, InfoTypesEnum.warning)
+      }
+      setTimeout(goBag, 2000);
+      return;
+    } else {
+      state = "execution";
+    }
+  }
+
   if (state === "execution") {
     //Сначала закрываем открытые окошки и только потом давим "Разобрать"
     let btnClose = $('div.button-content:contains("Закрыть")')[0];
