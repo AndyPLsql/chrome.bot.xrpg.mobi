@@ -23,6 +23,7 @@ let rewardSilverArena = 0;
 let rewardKeyArena = 0;
 let repeatCount = 0;
 let arenaCountdown = 340 ;
+let waitClanPortalRespawn = false;
 
 function init() {
   jobMessage = "";
@@ -113,6 +114,7 @@ function loops() {
       openHomePage(loops);
       return;
     } else {
+      state = "idle";
       openHeroProfile(loops);
       return;
     }
@@ -127,7 +129,8 @@ function loops() {
 
   if (state === "idle" || state === "complete") {
     //Быстрый переход в портал
-    if ($('div.questBlock.questBlock_isClickable-true.questBlock_isAvailable-true div.questBlock-label:contains("Портал")')[0] !== undefined)
+    if ($('div.questBlock.questBlock_isClickable-true.questBlock_isAvailable-true div.questBlock-label:contains("Портал")')[0] !== undefined
+      && !waitClanPortalRespawn)
     {
       goClanPortal();
     } else {
@@ -636,7 +639,7 @@ function goUnderground() {
   let btnWar;
   if (state === "idle" || state === "complete") {
     state = "prepare";
-    btnWar = $('div.mainPage-locations').find('div.questBlock.questBlock_isClickable-true.questBlock_isAvailable-true')[0];
+    btnWar = $('div.mainPage-locations div.questBlock.questBlock_isClickable-true.questBlock_isAvailable-true div.questBlock-label:contains("Квест"),div.questBlock-label:contains("Подземелье")');
     if (btnWar !== undefined) {
       btnWar.click();
       setTimeout(goUnderground, 3000);
@@ -767,30 +770,32 @@ function goArena() {
       jobMessage += "; Рейтинг:" + personLine.getElementsByClassName("arenaResults-rankDelta")[0].innerText;
       jobMessage += " (" + personLine.getElementsByClassName("arenaResults-rankValue")[0].innerText + ")";
       
-      let results = $('span.arenaResults-rewardResource');
+      let results = $('span.arenaResults-rewardResource,div.arenaResults-keysReward');
       for (let i = 0; i < results.length; i++) {
-        let listClasses = results[i].getElementsByTagName('span')[0].classList;
-        for (let j = 0; j < listClasses.length; j++ ) {
-          switch (listClasses[j]) {
-            case "icon_type-gold":
-              jobMessage += "; Золото = ";
-              continue; 
-              break;
-            case "icon_type-silver":
-              jobMessage += "; Серебро = ";
-              continue; 
-              break;
-            case "icon_type-key":
-              jobMessage += "; Ключи = ";
-              continue;
-              break;
-            case "icon_type-soulStone":
-              jobMessage += "; Фиал душ = ";
-              continue;
-              break;
-          }
-        }   
-        jobMessage += results[i].innerText;
+        let listTags = results[i].getElementsByTagName('span');
+        for (let t = 0; t < listTags.length; t++ ) {
+          let listClasses = listTags[t].classList;
+          for (let j = 0; j < listClasses.length; j++ ) {
+            switch (listClasses[j]) {
+              case "icon_type-gold":
+                jobMessage += "; Золото = " + results[i].innerText;
+                continue; 
+                break;
+              case "icon_type-silver":
+                jobMessage += "; Серебро = " + results[i].innerText;
+                continue; 
+                break;
+              case "icon_type-key":
+                jobMessage += "; Ключи = " + results[i].innerText;
+                continue;
+                break;
+              case "icon_type-soulStone":
+                jobMessage += "; Фиал душ = " + results[i].innerText;
+                continue;
+                break;
+            }
+          }   
+        }        
       }
       printJobMessage(true);
 
@@ -1226,12 +1231,34 @@ function goClanPortal() {
   }
 
   if (state === "execution") {
-    let btnWar = $('div.button-content:contains("В бой")')[0];
+    let btnWar = $('div.button.button_color-green div.button-content:contains("В бой")')[0];
     if (btnWar !== undefined) {
       btnWar.click();
       state = "fight";
       setTimeout(goClanPortal, 1000);
       return;
+    } else {
+      //Кнопка не активна - выяснеем почему
+      switch ($('span.portalLobbyActivity-respawnText')[0].innerText) 
+      {
+        case " Войти могут игроки, находящиеся в клане более 5 дней.":
+          printInfoMessage("Ты еще мал для портала!", InfoTypesEnum.details);  
+          waitClanPortalRespawn = true;
+          break;
+        case "Вы сможете войти через":
+          let countDownTimer = $('div.countdownTimer.portalLobbyActivity-respawnTimer');
+          if (countDownTimer.length > 0) {
+            countDownTimer = getMilliseconds(countDownTimer[0].innerText);
+            if (countDownTimer > 6000) {
+              waitClanPortalRespawn = true;
+              printInfoMessage("Ожидаем портал " + countDownTimer + " мс.", InfoTypesEnum.details);
+              setTimeout( function() {waitClanPortalRespawn = false;}, countDownTimer - 6000);
+            } else {
+              waitClanPortalRespawn = false;
+            }
+          }
+          break;
+      }
     }
   }
 
@@ -1249,7 +1276,6 @@ function goClanPortal() {
 
   state = "complete";
 }
-
 
 /**
  * Получение наград
