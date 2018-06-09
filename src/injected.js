@@ -28,7 +28,7 @@ let waitClanPortalRespawn = false;
 function init() {
   jobMessage = "";
   job = "unknown";
-  jobs = ["clantask", "bag", "task", "invasion", "arena", "underground", "underground", "underground", "tavern" ];
+  jobs = ["clantask", "bag", "task", "invasion", "arena", "underground", "underground", "underground", "tavern", "ruby" ];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
@@ -157,6 +157,9 @@ function loops() {
           break;
         case "invasion":
           goInvasion();
+          break;
+        case "ruby":
+          goRuby();
           break;
         default:
           currentJobId = 0;
@@ -1277,6 +1280,37 @@ function goClanPortal() {
   state = "complete";
 }
 
+function goRuby() {
+  printDebugInfo("goRuby");
+  repeatCount++;
+  job = "rubyHunt";
+
+  
+  if (state === "idle" || state === "complete") {
+    state = "takeRuby";
+    let btnRubyHunt =  $('div.mainPage-huntText:contains("Охота за Рубинами")')[0]
+    if (btnRubyHunt !== undefined) {
+      btnRubyHunt.click();
+      setTimeout(goRuby, 1500);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }
+  }
+
+  if (state === "takeRuby") {
+    let btnRubyHunt = $('div.button.button_color-green div.button-content:contains("Получить!")')[0];
+    if (btnRubyHunt !== undefined) {
+      state = "complete";
+      btnRubyHunt.click();
+      setTimeout(goRuby, 1500);
+      return;
+    }
+  }
+
+  state = "complete";
+}
 /**
  * Получение наград
  * TODO: Неплохобы доделать глобальный подсчет золота и ключей
