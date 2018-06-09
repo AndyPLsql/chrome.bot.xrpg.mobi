@@ -28,7 +28,7 @@ let waitClanPortalRespawn = false;
 function init() {
   jobMessage = "";
   job = "unknown";
-  jobs = ["clantask", "bag", "task", "invasion", "arena", "underground", "underground", "underground", "tavern", "ruby" ];
+  jobs = ["clantask", "clanwar", "bag", "task", "invasion", "arena", "underground", "underground", "underground", "tavern", "ruby" ];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
@@ -154,6 +154,9 @@ function loops() {
           break;
         case "clantask":
           goClanTask();
+          break;
+        case "clanwar":
+          goClanWar();
           break;
         case "invasion":
           goInvasion();
@@ -1280,6 +1283,9 @@ function goClanPortal() {
   state = "complete";
 }
 
+/**
+ * Забирает призы в охоте за рубинами
+ */
 function goRuby() {
   printDebugInfo("goRuby");
   repeatCount++;
@@ -1311,6 +1317,69 @@ function goRuby() {
 
   state = "complete";
 }
+
+/**
+ * Запись в клановых войнах
+ */
+function goClanWar() {
+  printDebugInfo("goClanWar");
+  repeatCount++;
+  job = "clanWar";
+
+  if (state === "idle" || state === "complete") {
+    state = "openClanWar";
+    let btnClanWar =  $('div.footer-sectionName:contains("Клан")')[0]
+    if (btnClanWar !== undefined) {
+      btnClanWar.click();
+      setTimeout(goClanWar, 1500);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }
+  }
+
+  if (state === "openClanWar") {
+    let btnContent = $('div.clanActivity-buttons div.funcpanel-content:contains("Клановые войны")')[0];
+    if (btnContent !== undefined) {
+      state = "choosePosition1";
+      btnContent.click();
+      setTimeout(goClanWar, 1500);
+      return;
+    } else {
+      state = "complete";
+      return;
+    }    
+  }
+
+  if (state === "choosePosition1") {
+    let btnRubyHunt = $('div.button.button_color-green div.button-content:contains("Выбрать позицию")')[0];
+    if (btnRubyHunt !== undefined) {
+      state = "choosePosition2";
+      btnRubyHunt.click();
+      setTimeout(goClanWar, 1500);
+      return;
+    } else {
+      state = "complete";
+      return;
+    } 
+  }
+
+  if (state === "choosePosition2") {
+    state = "exit";
+    let btnRubyHunt = $('div.clanWarMap-line div.clanWarMap-circle_isSelecting-true');
+    if (btnRubyHunt.length > 0) {
+      let position = getRandomInt(0, btnRubyHunt.length);
+      btnRubyHunt[position].click();
+      jobMessage = "Выбрана позиция №" + (position+1);
+      printJobMessage(true);
+      setTimeout(goClanWar, 1500);
+      return;
+    } 
+  }
+  state = "complete";
+}
+
 /**
  * Получение наград
  * TODO: Неплохобы доделать глобальный подсчет золота и ключей
@@ -1390,6 +1459,16 @@ function getHeroInfo() {
   }
 
 
+}
+
+/**
+ * Возвращает случайное целое число между min (включительно) и max (не включая max)
+ * Использование метода Math.round() даст вам неравномерное распределение!
+ * @param {*} min Нижняя граница (включительно)
+ * @param {*} max Верхняя граница (не включительно)
+ */
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
 }
 
 //
