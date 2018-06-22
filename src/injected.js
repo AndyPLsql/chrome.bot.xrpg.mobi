@@ -98,6 +98,9 @@ function closeClaimRewardNotification() {
 function loops() {
   printDebugInfo("loops");
 
+  //Выключение звука
+  $('div.footer-sound:contains("вкл")').each(function(index) { $(this).click(); });
+
   if (repeatCount > 150) {
     ai_reset();
     return;
