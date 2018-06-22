@@ -24,6 +24,7 @@ let rewardKeyArena = 0;
 let repeatCount = 0;
 let arenaCountdown = 340 ;
 let waitClanPortalRespawn = false;
+let bagLimit = 14;
 
 function init() {
   jobMessage = "";
@@ -39,6 +40,7 @@ function init() {
   rewardKeyArena = 0;
   repeatCount = 0;
   arenaCountdown = 340;
+  bagLimit = 14;
 }
 
 function ai_on(){
@@ -983,11 +985,11 @@ function goBag() {
       setTimeout(goBag, 2000);
       return;
     } else {
-      state = "execution";
+      state = "disassemble";
     }
   }
 
-  if (state === "execution") {
+  if (state === "disassemble") {
     //Сначала закрываем открытые окошки и только потом давим "Разобрать"
     let btnClose = $('div.button-content:contains("Закрыть")')[0];
     if (btnClose !== undefined) {
@@ -1011,10 +1013,22 @@ function goBag() {
       setTimeout(goBag, 4000);
       return;
     }
-
-    state = "complete"
+    state = "drop"
   }
 
+  if (state === "drop") {
+    if ($('div.equipmentItemBlock').length > bagLimit) {
+      for (let i = 1; i <= 7; i++) {
+        let items = $('div.equipmentGrade.equipmentGrade_grade-' + i.toString());
+        if (items.length > 0) {
+          items[0].parentElement.getElementsByClassName('link')[0].click();
+          setTimeout(goBag, 700);
+          return;
+        }
+      }
+    }
+    state = "complete"
+  }
   state = "complete";
 }
 
@@ -1141,7 +1155,7 @@ function goClanTask() {
 
   if (state === "getTask") {
     let listStartTask = $('div.button-content:contains("Приступить")');
-    let arrMatches = [ /Убей на арене 60 соперников/g , /Получи \d+\w кланового опыта/g, /Сразись 60 раз в подземелье/g, /Сразись в квесте 39 раз/g, /Собери 45 ключей/g];
+    let arrMatches = [ /Убей на арене 60 соперников/g , /Получи \d+(\.\d)?\w кланового опыта/g, /Сразись 60 раз в подземелье/g, /Сразись в квесте 39 раз/g, /Собери 45 ключей/g];
     for (let i = 0; i < arrMatches.length; i++) {
       for (let j = 0; j < listStartTask.length; j++) {
         if ( arrMatches[i].exec(listStartTask[j].parentElement.parentElement.getElementsByClassName("clanTask-text")[0].innerText) !== null) {
@@ -1387,42 +1401,46 @@ function goClanWar() {
  */
 function getClaim() {
   printDebugInfo("getClaim");
-  
-  let lightbox = $('div.lightbox-box div.claimRewardNotification')[0];
-  if (lightbox !== undefined) {
-    jobMessage += lightbox.getElementsByClassName('claimRewardNotification-title')[0].innerText;
-    let results = lightbox.getElementsByClassName('battleResultResources-resource');
-    //Перебор наград
-    for (let i = 0; i < results.length; i++) {
-      let listClasses = results[i].getElementsByTagName('span')[0].classList;
-      for (let j = 0; j < listClasses.length; j++ ) {
-        switch (listClasses[j]) {
-          case "icon_type-gold":
-            jobMessage += "; Золото = ";
-            continue; 
-            break; //TODO: Вроде как до бряка не доходит дело. Нужна достоверная инфа
-          case "icon_type-silver":
-            jobMessage += "; Серебро = ";
-            continue; 
-            break;            
-          case "icon_type-key":
-            jobMessage += "; Ключи = ";
-            continue;
-            break; //TODO: Вроде как до бряка не доходит дело. Нужна достоверная инфа
-          case "icon_type-soulStone":
-            jobMessage += "; Фиал душ = ";
-            continue;
-            break;
+  try {
+    let lightbox = $('div.lightbox-box div.claimRewardNotification')[0];
+    if (lightbox !== undefined) {
+      jobMessage += lightbox.getElementsByClassName('claimRewardNotification-title')[0].innerText;
+      let results = lightbox.getElementsByClassName('battleResultResources-resource');
+      //Перебор наград
+      for (let i = 0; i < results.length; i++) {
+        let listClasses = results[i].getElementsByTagName('span')[0].classList;
+        for (let j = 0; j < listClasses.length; j++ ) {
+          switch (listClasses[j]) {
+            case "icon_type-gold":
+              jobMessage += "; Золото = ";
+              continue; 
+              break; //TODO: Вроде как до бряка не доходит дело. Нужна достоверная инфа
+            case "icon_type-silver":
+              jobMessage += "; Серебро = ";
+              continue; 
+              break;            
+            case "icon_type-key":
+              jobMessage += "; Ключи = ";
+              continue;
+              break; //TODO: Вроде как до бряка не доходит дело. Нужна достоверная инфа
+            case "icon_type-soulStone":
+              jobMessage += "; Фиал душ = ";
+              continue;
+              break;
+          }
         }
+        jobMessage += results[i].getElementsByClassName("battleResultResources-value")[0].innerText;
       }
-      jobMessage += results[i].getElementsByClassName("battleResultResources-value")[0].innerText;
+      //Закрытие окна наград
+      let btnClose = lightbox.getElementsByClassName("button-content")[0];
+      if (btnClose !== undefined) {
+        btnClose.click();
+      }
+      printJobMessage(true);
     }
-    //Закрытие окна наград
-    let btnClose = lightbox.getElementsByClassName("button-content")[0];
-    if (btnClose !== undefined) {
-      btnClose.click();
-    }
-    printJobMessage(true);
+  }
+  catch(err) {
+    console.log("Поймали ошибку: ", err)
   }
 }
 
