@@ -1262,25 +1262,30 @@ function goClanPortal() {
       return;
     } else {
       //Кнопка не активна - выяснеем почему
-      switch ($('span.portalLobbyActivity-respawnText')[0].innerText) 
-      {
-        case " Войти могут игроки, находящиеся в клане более 5 дней.":
-          printInfoMessage("Ты еще мал для портала!", InfoTypesEnum.details);  
-          waitClanPortalRespawn = true;
-          break;
-        case "Вы сможете войти через":
-          let countDownTimer = $('div.countdownTimer.portalLobbyActivity-respawnTimer');
-          if (countDownTimer.length > 0) {
-            countDownTimer = getMilliseconds(countDownTimer[0].innerText);
-            if (countDownTimer > 6000) {
-              waitClanPortalRespawn = true;
-              printInfoMessage("Ожидаем портал " + countDownTimer + " мс.", InfoTypesEnum.details);
-              setTimeout( function() {waitClanPortalRespawn = false;}, countDownTimer - 6000);
-            } else {
-              waitClanPortalRespawn = false;
+      try {
+        switch ($('span.portalLobbyActivity-respawnText')[0].innerText) 
+        {
+          case " Войти могут игроки, находящиеся в клане более 5 дней.":
+            printInfoMessage("Ты еще мал для портала!", InfoTypesEnum.details);  
+            waitClanPortalRespawn = true;
+            break;
+          case "Вы сможете войти через":
+            let countDownTimer = $('div.countdownTimer.portalLobbyActivity-respawnTimer');
+            if (countDownTimer.length > 0) {
+              countDownTimer = getMilliseconds(countDownTimer[0].innerText);
+              if (countDownTimer > 6000) {
+                waitClanPortalRespawn = true;
+                printInfoMessage("Ожидаем портал " + countDownTimer + " мс.", InfoTypesEnum.details);
+                setTimeout( function() {waitClanPortalRespawn = false;}, countDownTimer - 6000);
+              } else {
+                waitClanPortalRespawn = false;
+              }
             }
-          }
-          break;
+            break;
+        }
+      }
+      catch (err) {
+        console.log("Ошибочка: ", err)
       }
     }
   }
