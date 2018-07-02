@@ -29,7 +29,7 @@ let bagLimit = 14;
 function init() {
   jobMessage = "";
   job = "unknown";
-  jobs = ["clantask", "clanwar", "bag", "task", "invasion", "arena", "underground", "underground", "underground", "tavern", "ruby" ];
+  jobs = ["fireplace", "clantask", "clanwar", "bag", "task", "invasion", "underground", "underground", "underground", "arena", "tavern", "ruby" ];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
@@ -168,6 +168,9 @@ function loops() {
           break;
         case "ruby":
           goRuby();
+          break;
+        case "fireplace":
+          goFireplace();
           break;
         default:
           currentJobId = 0;
@@ -650,9 +653,9 @@ function goUnderground() {
   let btnWar;
   if (state === "idle" || state === "complete") {
     state = "prepare";
-    btnWar = $('div.mainPage-locations div.questBlock.questBlock_isClickable-true.questBlock_isAvailable-true div.questBlock-label:contains("Квест"),div.questBlock-label:contains("Подземелье")');
-    if (btnWar !== undefined) {
-      btnWar.click();
+    btnWar = $('div.mainPage-locations div.questSphere.questSphere_isAvailable-true span.questSphere-labelText:contains("Квест"),span.questSphere-labelText:contains("Подземелье")');
+    if (btnWar.length > 0) {
+      btnWar[0].click();
       setTimeout(goUnderground, 3000);
       return;
     } else {
@@ -849,9 +852,10 @@ function goTavern() {
     }
   }
   if (state === "execution") {
-    let btnClose = $('div.button-content:contains("Закрыть")')[0];
-    if (btnClose !== undefined) {
-      btnClose.click();
+    let btnClose = $('div.button-content:contains("Закрыть")');
+    
+    if (btnClose.length > 0) {
+      btnClose[0].click();
       setTimeout(goTavern, 1000);
       return;
     }
@@ -865,44 +869,44 @@ function goTavern() {
       return;
     }    
 
-    let btnsTakeFight = $('div.button-content:contains("Автобой")')[0];
-    if (btnsTakeFight !== undefined) {
-      btnsTakeFight.click();
+    let btnsTakeFight = $('div.button-content:contains("Автобой")');
+    if (btnsTakeFight.length > 0) {
+      btnsTakeFight[0].click();
       setTimeout(goTavern, 2000);
       return;
     }
 
-    let btnsReward = $('div.button-content:contains("Награда")')[0]
-    if (btnsReward !== undefined) {
-      btnsReward.click();
+    let btnsReward = $('div.button-content:contains("Награда")')
+    if (btnsReward.length > 0) {
+      btnsReward[0].click();
       setTimeout(goTavern,2000);
       return;
     }
 
-    btnsReward = $('div.button-content:contains("Продолжить")')[0]
-    if (btnsReward !== undefined) {
-      btnsReward.click();
+    btnsReward = $('div.button-content:contains("Продолжить")')
+    if (btnsReward.length > 0) {
+      btnsReward[0].click();
       setTimeout(goTavern, 2000);
       return;
     }
 
-    let btnsBox= $('div.progressBar-valueFill[style*="width: 100%;"]')[0];
-    if (btnsBox !== undefined) {
-      btnsBox.click();
+    let btnsBox= $('div.progressBar-valueFill[style*="width: 100%;"]');
+    if (btnsBox.length > 0) {
+      btnsBox[0].click();
       setTimeout(goTavern, 2000);
       return;
     }  
     
-    let btnToWar = $('div.button-content:contains("В бой")')[0];
-    if (btnToWar !== undefined) {
-      btnToWar.click();
+    let btnToWar = $('div.button-content:contains("В бой")');
+    if (btnToWar.length > 0) {
+      btnToWar[0].click();
       state = "fight";
       setTimeout(goTavern, 5000);
       return;
     }
     
-    let canvas = $('div[class*="fightscene"]').find('canvas')[0];
-    if (canvas !== undefined) {
+    let canvas = $('div[class*="fightscene"]').find('canvas');
+    if (canvas.length > 0) {
       state = "fight";
       setTimeout(goTavern, 2000);
       return;
@@ -1398,6 +1402,68 @@ function goClanWar() {
       setTimeout(goClanWar, 1500);
       return;
     } 
+  }
+  state = "complete";
+}
+
+/**
+ * Поджигаем камин и заходим за бонусами
+ */
+function goFireplace() {
+  printDebugInfo("goFireplace");
+  repeatCount++;
+  job = "fireplace";
+  
+  if (state === "idle" || state === "complete") {
+    state = "openFirelace";
+    let btnClanWar =  $('div.footer-sectionName:contains("Клан")')[0]
+    if (btnClanWar !== undefined) {
+      btnClanWar.click();
+    } else {
+      state = "exit";
+    }
+    setTimeout(goFireplace, 1500);    
+    return;
+  }
+
+  if (state === "openFirelace") {
+    let btnContent = $('div.clanActivity-buttons div.funcpanel-content:contains("Камин")')[0];
+    if (btnContent !== undefined) {
+      state = "lightFireplace";
+      btnContent.click();
+    } else {
+      state = "exit";
+    }    
+    setTimeout(goFireplace, 1500);
+    return;
+  }
+
+  if (state === "lightFireplace") {
+    //Нет смысла зажигать камин, если активен бонус
+    if ( $('div.clanFireplacePage-activeBonus div:contains("Ваш бонус закончится через")').length === 0 ) {
+      let btnFireplace = $('div.button.button_color-green div.button-content:contains("Зажечь огонь")');
+      if (btnFireplace.length > 0) {
+        btnFireplace[0].click();
+      }
+    }
+    state = "takeFireplace";
+    setTimeout(goFireplace, 1500);
+    return;
+  }
+
+  if (state === "takeFireplace") {
+    let btnFireplace = $('div.button.button_color-green div.button-content:contains("Получить бонус")');
+    if (btnFireplace.length > 0) {
+      btnFireplace[0].click();
+    }
+    state = "exit";
+    setTimeout(goFireplace, 1500);
+    return;
+  }
+
+  if (state === "exit") {
+    state = "complete";
+
   }
   state = "complete";
 }
