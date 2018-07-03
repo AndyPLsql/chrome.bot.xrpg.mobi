@@ -134,7 +134,7 @@ function loops() {
 
   if (state === "idle" || state === "complete") {
     //Быстрый переход в портал
-    if ($('div.questBlock.questBlock_isClickable-true.questBlock_isAvailable-true div.questBlock-label:contains("Портал")')[0] !== undefined
+    if ($('div.mainPage-locations div.questSphere.questSphere_isAvailable-true span.questSphere-labelText:contains("Портал")')[0] !== undefined
       && !waitClanPortalRespawn)
     {
       goClanPortal();
