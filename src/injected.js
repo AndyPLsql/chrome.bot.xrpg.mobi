@@ -741,6 +741,12 @@ function goArena() {
   job = "arena";
   repeatCount++;
   if (state === "idle" || state === "complete") {
+    var currentdate = new Date();
+    if(currentdate.getHours() >= 16 && currentdate.getHours() <= 20) {
+      state = "complete";
+      return
+    }
+
     state = "prepare";
     let btnArena =  $('div.sectionIcon-name:contains("Арена")')[0]
     if (btnArena !== undefined) {
@@ -1415,6 +1421,12 @@ function goFireplace() {
   job = "fireplace";
   
   if (state === "idle" || state === "complete") {
+    
+    var currentdate = new Date();
+    if(currentdate.getHours() !== 17) { //Зажигаем камин только в с 17 до 18 часов
+      state = "complete";
+      return
+    }
     state = "openFirelace";
     let btnClanWar =  $('div.footer-sectionName:contains("Клан")')[0]
     if (btnClanWar !== undefined) {
