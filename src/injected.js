@@ -1421,12 +1421,6 @@ function goFireplace() {
   job = "fireplace";
   
   if (state === "idle" || state === "complete") {
-    
-    var currentdate = new Date();
-    if(currentdate.getHours() !== 17) { //Зажигаем камин только в с 17 до 18 часов
-      state = "complete";
-      return
-    }
     state = "openFirelace";
     let btnClanWar =  $('div.footer-sectionName:contains("Клан")')[0]
     if (btnClanWar !== undefined) {
@@ -1451,11 +1445,16 @@ function goFireplace() {
   }
 
   if (state === "lightFireplace") {
-    //Нет смысла зажигать камин, если активен бонус
-    if ( $('div.clanFireplacePage-activeBonus div:contains("Ваш бонус закончится через")').length === 0 ) {
-      let btnFireplace = $('div.button.button_color-green div.button-content:contains("Зажечь огонь")');
-      if (btnFireplace.length > 0) {
-        btnFireplace[0].click();
+    var currentdate = new Date();
+    //Зажигаем камин только в с 17 до 18 часов
+    if(currentdate.getHours() === 17) {
+      //Нет смысла зажигать камин, если активен бонус
+      if ( $('div.clanFireplacePage-activeBonus div:contains("Ваш бонус закончится через")').length === 0 ) {
+        let btnFireplace = $('div.button.button_color-green div.button-content:contains("Зажечь огонь")');
+        if (btnFireplace.length > 0) {
+          printInfoMessage("Камин раззожен!", InfoTypesEnum.details)
+          btnFireplace[0].click();
+        }
       }
     }
     state = "takeFireplace";
