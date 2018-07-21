@@ -29,7 +29,7 @@ let bagLimit = 14;
 function init() {
   jobMessage = "";
   job = "unknown";
-  jobs = ["fireplace", "clantask", "clanwar", "bag", "task", "invasion", "underground", "underground", "underground", "arena", "tavern", "ruby" ];
+  jobs = ["fireplace", "clantask", "clanwar", "bag", "task", "underground", "underground", "underground", "invasion",  "arena", "tavern", "ruby" ];
   currentJobId = 0;
   state = "idle";
   mode = "auto";
@@ -281,369 +281,186 @@ function printJobMessage(clearMessage=false) {
   }
 }
 
+/**
+ * Возвращает события мыши
+ * @param {*} x cursor position
+ * @param {*} y cursor position
+ */
+function execMouseEvent(canvas, event, x, y) {
+  let retevent;
+  switch (event) {
+    case "focus":
+      retevent = new MouseEvent('focus', {
+        bubbles: false,
+        cancelBubble: false,
+        cancelable: false,
+        composed: false,
+        defaultPrevented: false,
+        eventPhase: 0,
+        isTrusted: false,
+        returnValue: true,
+      });
+      window.dispatchEvent(retevent);
+      break;
+    case "mousedown":
+      retevent = new MouseEvent('mousedown', {
+          altKey: false,
+          bubbles: true,
+          button: 0,
+          buttons: 1,
+          cancelBubble: false,
+          cancelable: true,
+          clientX: x,
+          clientY: y,
+          composed: true,
+          ctrlKey: false,
+          currentTarget: null,
+          defaultPrevented: false,
+          detail: 1,
+          eventPhase: 0,
+          fromElement: null,
+          identifier: 0,
+          isTrusted: false,
+          layerX: x,
+          layerY: y,
+          metaKey: false,
+          movementX: 0,
+          movementY: 0,
+          offsetX: x,
+          offsetY: y,
+          pageX: x,
+          pageY: y,
+          //path ?
+          relatedTarget: null,
+          returnValue: true,
+          screenX: x,
+          screenY: y,
+          shiftKey: false,
+          which: 1,
+          x: x,
+          y: y
+        });
+      canvas.dispatchEvent(retevent);  
+      break;
+    case "mouseup":
+      retevent = new MouseEvent('mouseup', {
+        altKey: false,
+        bubbles: true,
+        button: 0,
+        buttons: 0,
+        cancelBubble: false,
+        cancelable: true,
+        clientX: x,
+        clientY: y,
+        composed: true,
+        ctrlKey: false,
+        currentTarget: null,
+        defaultPrevented: false,
+        detail: 1,
+        eventPhase: 2,
+        fromElement: null,
+        identifier: 0,
+        isTrusted: true,
+        layerX: x,
+        layerY: y,
+        metaKey: false,
+        movementX: 0,
+        movementY: 0,
+        offsetX: x,
+        offsetY: y,
+        pageX: x,
+        pageY: y,
+        //path ?
+        relatedTarget: null,
+        screenX: x,
+        screenY: y,
+        shiftKey: false,
+        which: 1,
+        x: x,
+        y: y
+      });
+      canvas.dispatchEvent(retevent);
+      break;
+    case "mouseover":
+      retevent = new MouseEvent('mouseover', {
+        altKey: false,
+        bubbles: true,
+        button: 0,
+        buttons: 0,
+        cancelBubble: false,
+        cancelable: true,
+        clientX: x,
+        clientY: y,
+        composed: true,
+        ctrlKey: false,
+        currentTarget: canvas,
+        defaultPrevented: false,
+        detail: 0,
+        eventPhase: 2,
+        isTrusted: true,
+        layerX: x,
+        layerY: y,
+        metaKey: false,
+        movementX: 0,
+        movementY: 0,
+        mozInputSource: 1,
+        mozPressure: 0,
+        offsetX: x,
+        offsetY: y,
+        pageX: x,
+        pageY: y,
+        //path ?
+        screenX: x,
+        screenY: y,
+        shiftKey: false,
+        which: 1,
+        x: x,
+        y: y
+      });
+      canvas.dispatchEvent(retevent);  
+      break;
+  }
+  return retevent;
+}
+
 function kick(canvas) {
     printDebugInfo("kick");
-    let x = Math.round(window.innerWidth/2);
-    let y = 460;
-    let evtFocus = new MouseEvent('focus', {
-      bubbles: false,
-      cancelBubble: false,
-      cancelable: false,
-      composed: false,
-      defaultPrevented: false,
-      eventPhase: 0,
-      isTrusted: false,
-      returnValue: true,
-    });
+    //Удар по центру (арена)
+    execMouseEvent(canvas, "focus", Math.round(window.innerWidth/2), 460);
+    execMouseEvent(canvas, "mouseover", Math.round(window.innerWidth/2), 460);
+    execMouseEvent(canvas, "mousedown", Math.round(window.innerWidth/2), 460);
+    execMouseEvent(canvas, "mouseup", Math.round(window.innerWidth/2), 460);
 
-    let evtDown = new MouseEvent('mousedown', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 1,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: null,
-      defaultPrevented: false,
-      detail: 1,
-      eventPhase: 0,
-      fromElement: null,
-      identifier: 0,
-      isTrusted: false,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      relatedTarget: null,
-      returnValue: true,
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });
-    let evtUp = new MouseEvent('mouseup', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 0,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: null,
-      defaultPrevented: false,
-      detail: 1,
-      eventPhase: 2,
-      fromElement: null,
-      identifier: 0,
-      isTrusted: true,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      relatedTarget: null,
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });    
-    let evtOver = new MouseEvent('mouseover', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 0,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: canvas,
-      defaultPrevented: false,
-      detail: 0,
-      eventPhase: 2,
-      isTrusted: true,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      mozInputSource: 1,
-      mozPressure: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });
+    //Удар по центру (портал)
+    execMouseEvent(canvas, "focus", Math.round(window.innerWidth/2), 510);
+    execMouseEvent(canvas, "mouseover", Math.round(window.innerWidth/2), 510);
+    execMouseEvent(canvas, "mousedown", Math.round(window.innerWidth/2), 510);
+    execMouseEvent(canvas, "mouseup", Math.round(window.innerWidth/2), 510);
 
-    x = Math.round(window.innerWidth/2) - 60;
-    y = 470;
-    let evtLeftDown = new MouseEvent('mousedown', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 1,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: null,
-      defaultPrevented: false,
-      detail: 1,
-      eventPhase: 0,
-      fromElement: null,
-      identifier: 0,
-      isTrusted: false,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      relatedTarget: null,
-      returnValue: true,
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });
-    let evtLeftUp = new MouseEvent('mouseup', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 0,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: null,
-      defaultPrevented: false,
-      detail: 1,
-      eventPhase: 2,
-      fromElement: null,
-      identifier: 0,
-      isTrusted: true,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      relatedTarget: null,
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });    
-    let evtLeftOver = new MouseEvent('mouseover', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 0,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: canvas,
-      defaultPrevented: false,
-      detail: 0,
-      eventPhase: 2,
-      isTrusted: true,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      mozInputSource: 1,
-      mozPressure: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });
+    //Левый удар (арена)
+    execMouseEvent(canvas, "focus", Math.round(window.innerWidth/2) - 60, 470);
+    execMouseEvent(canvas, "mouseover", Math.round(window.innerWidth/2) - 60, 470);
+    execMouseEvent(canvas, "mousedown", Math.round(window.innerWidth/2) - 60, 470);
+    execMouseEvent(canvas, "mouseup", Math.round(window.innerWidth/2) - 60, 470);
 
-    x = Math.round(window.innerWidth/2) + 60;
-    y = 471;
+    //Левый удар (портал)
+    execMouseEvent(canvas, "focus", Math.round(window.innerWidth/2) - 60, 510);
+    execMouseEvent(canvas, "mouseover", Math.round(window.innerWidth/2) - 60, 510);
+    execMouseEvent(canvas, "mousedown", Math.round(window.innerWidth/2) - 60, 510);
+    execMouseEvent(canvas, "mouseup", Math.round(window.innerWidth/2) - 60, 510);
 
-    let evtRightDown = new MouseEvent('mousedown', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 1,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: null,
-      defaultPrevented: false,
-      detail: 1,
-      eventPhase: 0,
-      fromElement: null,
-      identifier: 0,
-      isTrusted: false,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      relatedTarget: null,
-      returnValue: true,
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });
-    let evtRightUp = new MouseEvent('mouseup', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 0,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: null,
-      defaultPrevented: false,
-      detail: 1,
-      eventPhase: 2,
-      fromElement: null,
-      identifier: 0,
-      isTrusted: true,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      relatedTarget: null,
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });    
-    let evtRightOver = new MouseEvent('mouseover', {
-      altKey: false,
-      bubbles: true,
-      button: 0,
-      buttons: 0,
-      cancelBubble: false,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      composed: true,
-      ctrlKey: false,
-      currentTarget: canvas,
-      defaultPrevented: false,
-      detail: 0,
-      eventPhase: 2,
-      isTrusted: true,
-      layerX: x,
-      layerY: y,
-      metaKey: false,
-      movementX: 0,
-      movementY: 0,
-      mozInputSource: 1,
-      mozPressure: 0,
-      offsetX: x,
-      offsetY: y,
-      pageX: x,
-      pageY: y,
-      //path ?
-      screenX: x,
-      screenY: y,
-      shiftKey: false,
-      which: 1,
-      x: x,
-      y: y
-    });
+    //Правый удар (арена)
+    execMouseEvent(canvas, "focus", Math.round(window.innerWidth/2) + 60, 470);
+    execMouseEvent(canvas, "mouseover", Math.round(window.innerWidth/2) + 60, 470);
+    execMouseEvent(canvas, "mousedown", Math.round(window.innerWidth/2) + 60, 470);
+    execMouseEvent(canvas, "mouseup", Math.round(window.innerWidth/2) + 60, 470);
 
-    window.dispatchEvent(evtFocus);
-    canvas.dispatchEvent(evtLeftOver);
-    canvas.dispatchEvent(evtLeftDown);
-    canvas.dispatchEvent(evtLeftUp);
-    //console.log("left kick. x:", evtLeftDown.clientX, "y:", evtLeftDown.clientY)
+    //Правый удар (портал)
+    execMouseEvent(canvas, "focus", Math.round(window.innerWidth/2) + 60, 510);
+    execMouseEvent(canvas, "mouseover", Math.round(window.innerWidth/2) + 60, 510);
+    execMouseEvent(canvas, "mousedown", Math.round(window.innerWidth/2) + 60, 510);
+    execMouseEvent(canvas, "mouseup", Math.round(window.innerWidth/2) + 60, 510);
 
-    canvas.dispatchEvent(evtRightOver);
-    canvas.dispatchEvent(evtRightDown);
-    canvas.dispatchEvent(evtRightUp);
-    //console.log("right kick. x:", evtRightDown.clientX, "y:", evtRightDown.clientY)
-
-    window.dispatchEvent(evtFocus);
-    canvas.dispatchEvent(evtOver);
-    canvas.dispatchEvent(evtDown);
-    canvas.dispatchEvent(evtUp);
-    //console.log("main kick. x:", evtDown.clientX, "y:", evtDown.clientY)
 }
 
 function goUnderground() {
