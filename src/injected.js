@@ -1083,8 +1083,14 @@ function goClanPortal() {
   if (state === "execution") {
     let btnWar = $('div.button.button_color-green div.button-content:contains("В бой")')[0];
     if (btnWar !== undefined) {
-      btnWar.click();
-      state = "fight";
+      //Ожидание для одновременного начала боя, ждем до первой 5 или 10ой минуты, но которая не ближе 2х минут
+      let currentdate = new Date();
+      repeatCount--;
+      let cm = currentdate.getMinutes() > 9 ? currentdate.getMinutes() % 10  : currentdate.getMinutes();
+      if (cm === 5 || cm === 0) {
+        btnWar.click();
+        state = "fight";
+      }
       setTimeout(goClanPortal, 1000);
       return;
     } else {
@@ -1262,7 +1268,7 @@ function goFireplace() {
   }
 
   if (state === "lightFireplace") {
-    var currentdate = new Date();
+    let currentdate = new Date();
     //Зажигаем камин только в с 17 до 18 часов
     if(currentdate.getHours() === 17) {
       //Нет смысла зажигать камин, если активен бонус
